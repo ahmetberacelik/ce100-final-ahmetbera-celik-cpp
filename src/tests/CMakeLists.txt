@@ -37,8 +37,8 @@ if(ENABLE_UTILITY)
 	add_subdirectory(utility)
 endif()
 
-# Calculator tests
-if(ENABLE_CALCULATOR)
-	add_subdirectory(calculator)
+# Hometracker tests
+if(ENABLE_HOMETRACKER)
+	add_subdirectory(hometracker)
 endif()
 

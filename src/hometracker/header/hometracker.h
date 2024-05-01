@@ -1,23 +1,23 @@
 /**
- * @file calculator.h
+ * @file hometracker.h
  * 
  * @brief Provides functions for math. utilities
  */
 
-#ifndef CALCULATOR_H
-#define CALCULATOR_H
+#ifndef HOMETRACKER_H
+#define HOMETRACKER_H
 
 #include "../../utility/header/commonTypes.h"
 
 namespace Coruh
 {
-    namespace Calculator
+    namespace Hometracker
     {
         /**
-            @class Calculator
+            @class Hometracker
             @brief Provides Basic functions for various operations.
         */
-        class Calculator
+        class Hometracker
         {
         public:
             /**
@@ -59,4 +59,4 @@ namespace Coruh
     }
 }
 
-#endif // CALCULATOR_H
+#endif // HOMETRACKER_H
