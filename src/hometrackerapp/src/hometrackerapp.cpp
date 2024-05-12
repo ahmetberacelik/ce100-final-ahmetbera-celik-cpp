@@ -11,6 +11,7 @@
 #include "../../hometracker/header/hometracker.h"  // Adjust this include path based on your project structure
 
 int main() {
-
+    bool authenticationResult = userAuthentication(std::cin, std::cout);
+    mainMenu(authenticationResult, std::cin, std::cout);
     return 0;
 }
