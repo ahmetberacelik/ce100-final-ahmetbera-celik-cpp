@@ -1,6 +1,11 @@
 #include "../header/hometracker.h"
 #include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <queue>
 
+Node nodes[100];
+int nodeCount = 0;
 bool guestMode = false; /**< Boolean variable to indicate whether the program is in guest mode (false by default). */
 char active_user[50];
 
@@ -46,7 +51,7 @@ bool mainMenu(bool authenticationResult, std::istream& in, std::ostream& out) {
 
         switch (choice) {
         case 1:
-            out << "Hi\n";
+            utilityLogging(in, out, guestMode);
             break;
         case 2:
             out << "Hi\n";
@@ -132,7 +137,12 @@ bool userAuthentication(std::istream& in, std::ostream& out) {
         out << "| 4. Exit Program           |\n";
         out << "+---------------------------+\n";
         out << "Please select an option: ";
-        in >> choice;
+        if (!(in >> choice)) {
+            in.clear();
+            in.get();
+            out << "Invalid input, please enter a number.\n";
+            continue;
+        }
         in.get();
 
         switch (choice) {
@@ -195,6 +205,268 @@ bool userAuthentication(std::istream& in, std::ostream& out) {
     }
 }
 
+bool saveUtilityUsage(const UtilityUsage& usage, const char* filename) {
+    // Öncelikle var olan veriyi güncelleyin veya yeni veri ekleyin
+    UtilityUsage usages[100];
+    int count = loadUtilityUsages(filename, usages, 100);
+    bool found = false;
+    for (int i = 0; i < count; i++) {
+        if (strcmp(usages[i].username, usage.username) == 0) {
+            usages[i].electricity = usage.electricity;
+            usages[i].water = usage.water;
+            usages[i].gas = usage.gas;
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        usages[count++] = usage;
+    }
+
+    // Veriyi dosyaya geri yaz
+    FILE* file = fopen(filename, "wb");
+    fwrite(usages, sizeof(UtilityUsage), count, file);
+    fclose(file);
+    return true;
+}
+
+// Veri yükleme fonksiyonu
+int loadUtilityUsages(const char* filename, UtilityUsage* usages, int maxUsages) {
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        return 0;
+    }
+    int count = 0;
+    while (fread(&usages[count], sizeof(UtilityUsage), 1, file)) {
+        if (++count >= maxUsages) break;
+    }
+    fclose(file);
+    return count;
+}
+
+void BFS(Node* startNode, std::ostream& out) {
+    Node* queue[100];
+    bool visited[100] = { false };
+    int front = 0, rear = 0;
+
+    queue[rear++] = startNode;
+    visited[startNode->username[0] - 'A'] = true;  // Simple hash for visitation check
+
+    while (front != rear) {
+        Node* currentNode = queue[front++];
+        out << "Username: " << currentNode->username << ", Electricity: " << currentNode->electricity
+            << ", Water: " << currentNode->water << ", Gas: " << currentNode->gas << std::endl;
+
+        for (int i = 0; i < currentNode->neighborCount; ++i) {
+            Node* neighbor = currentNode->neighbors[i];
+            if (!visited[neighbor->username[0] - 'A']) {
+                queue[rear++] = neighbor;
+                visited[neighbor->username[0] - 'A'] = true;
+            }
+        }
+    }
+}
+
+void DFS(Node* startNode, std::ostream& out) {
+    Node* stack[100];
+    bool visited[100] = { false };
+    int top = 0;
+
+    stack[top++] = startNode;
+
+    while (top != 0) {
+        Node* currentNode = stack[--top];
+        if (!visited[currentNode->username[0] - 'A']) {
+            out << "Username: " << currentNode->username << ", Electricity: " << currentNode->electricity
+                << ", Water: " << currentNode->water << ", Gas: " << currentNode->gas << std::endl;
+            visited[currentNode->username[0] - 'A'] = true;
+        }
+
+        for (int i = 0; i < currentNode->neighborCount; ++i) {
+            Node* neighbor = currentNode->neighbors[i];
+            if (!visited[neighbor->username[0] - 'A']) {
+                stack[top++] = neighbor;
+            }
+        }
+    }
+}
+
+bool loadGraph(const char* filename) {
+    UtilityUsage usages[100];
+    int usageCount = loadUtilityUsages(filename, usages, 100);
+
+    nodeCount = 0;  // Reset node count
+
+    for (int i = 0; i < usageCount; ++i) {
+        if (strcmp(usages[i].username, active_user) == 0) {  // Only load active user's data
+            strcpy(nodes[nodeCount].username, usages[i].username);  // Use strcpy to copy username
+            nodes[nodeCount].electricity = usages[i].electricity;
+            nodes[nodeCount].water = usages[i].water;
+            nodes[nodeCount].gas = usages[i].gas;
+            nodeCount++;
+            break;  // Since only one user's data is needed
+        }
+    }
+    return true;
+}
+
+
+
+bool viewUtilityUsages(std::istream& in, std::ostream& out, int searchType) {
+    if (nodeCount == 0) {
+        out << "No utility data available for the current user.\n";
+        return false;
+    }
+
+    out << "Select search method:\n1. BFS\n2. DFS\n";
+    int choice;
+    std::cin >> choice;
+
+    if (choice == 1) {
+        out << "Utility usages (BFS) for " << active_user << ":\n";
+        BFS(&nodes[0], out);  // Assuming single user node
+    }
+    else if (choice == 2) {
+        out << "Utility usages (DFS) for " << active_user << ":\n";
+        DFS(&nodes[0], out);  // Assuming single user node
+    }
+    else {
+        out << "Invalid search type selected.\n";
+    }
+    in.get();
+    return true;
+}
+
+int findPath(int source, int sink, int parent[], Node nodes[], int numNodes) {
+    bool visited[100] = { false };
+    std::queue<int> queue;
+    queue.push(source);
+    visited[source] = true;
+    parent[source] = -1;
+
+    while (!queue.empty()) {
+        int u = queue.front();
+        queue.pop();
+
+        for (int i = 0; i < nodes[u].neighborCount; i++) {
+            int v = nodes[u].neighbors[i]->username[0] - 'A';  // Basit bir index hesaplama
+            if (!visited[v] && nodes[u].neighbors[i]->electricity > 0) {  // Kapasite kontrolü
+                if (v == sink) {
+                    parent[v] = u;
+                    return nodes[u].neighbors[i]->electricity;  // Yol bulundu
+                }
+                queue.push(v);
+                visited[v] = true;
+                parent[v] = u;
+            }
+        }
+    }
+    return 0;
+}
+
+int fordFulkerson(Node nodes[], int numNodes, int source, int sink) {
+    int parent[100];
+    int max_flow = 0;
+
+    while (true) {
+        int path_flow = findPath(source, sink, parent, nodes, numNodes);
+        if (path_flow == 0)
+            break;
+
+        for (int v = sink; v != source; v = parent[v]) {
+            int u = parent[v];
+            nodes[u].neighbors[v]->electricity -= path_flow;
+            nodes[v].neighbors[u]->electricity += path_flow;
+        }
+
+        max_flow += path_flow;
+    }
+
+    return max_flow;
+}
+
+void showMaximumFlow(std::ostream& out, Node nodes[], int numNodes) {
+    int source = 0;  // Kaynak düðüm indexi (Örnek)
+    int sink = numNodes - 1;  // Hedef düðüm indexi (Örnek)
+    int maxFlow = fordFulkerson(nodes, numNodes, source, sink);
+    out << "Maksimum Akýþ: " << maxFlow << std::endl;
+}
+
+bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
+    if (localGuestMode) {
+        out << "Guest mode does not have permission to log utility.\n";
+        in.get();
+        return false;
+    }
+    clearScreen();
+    const char* filename = "utility_usages.bin";
+    UtilityUsage usage;
+    strcpy(usage.username, active_user);
+
+    int choice;
+    while (true) {
+        clearScreen();
+        out << "+-------------------------------------+\n";
+        out << "|          UTILITY LOGGING MENU       |\n";
+        out << "+-------------------------------------+\n";
+        out << "| 1. Log Electricity                  |\n";
+        out << "| 2. Log Water                        |\n";
+        out << "| 3. Log Gas                          |\n";
+        out << "| 4. View Total Usages                |\n";
+        out << "| 5. Calculate and Show Maximum Flow  |\n";
+        out << "| 6. Return to Main Menu              |\n";
+        out << "+-------------------------------------+\n";
+        out << "Please select an option: ";
+        if (!(in >> choice)) {
+            in.clear();
+            in.get();
+            out << "Invalid input, please enter a number.\n";
+            continue;
+        }
+        in.get();
+
+        switch (choice) {
+        case 1:
+            clearScreen();
+            out << "Enter electricity usage (kWh): ";
+            in >> usage.electricity;
+            saveUtilityUsage(usage, filename);
+            break;
+        case 2:
+            clearScreen();
+            out << "Enter water usage (cubic meters): ";
+            in >> usage.water;
+            saveUtilityUsage(usage, filename);
+            break;
+        case 3:
+            clearScreen();
+            out << "Enter gas usage (cubic meters): ";
+            in >> usage.gas;
+            saveUtilityUsage(usage, filename);
+            break;
+        case 4:
+            clearScreen();
+            loadGraph(filename);
+            viewUtilityUsages(in, out, choice - 3);
+            in.get();
+            break;
+        case 5:
+            clearScreen();
+            // Assuming that the graph is already loaded and nodes are populated
+            showMaximumFlow(out, nodes, nodeCount);
+            out << "Press enter to continue...\n";
+            in.get();  // Wait for user to press enter
+            break;
+        case 6:
+            return true;
+        default:
+            out << "Invalid option, please try again.\n";
+            in.get();
+        }
+    }
+    return true;
+}
+
 int saveReminder(const Reminder* reminder, const char* filename) {
     FILE* file = fopen(filename, "ab");
     fwrite(reminder, sizeof(Reminder), 1, file);
@@ -217,11 +489,11 @@ int loadReminders(const char* username, const char* filename, Reminder* reminder
     return reminderCount;
 }
 
-void printReminders(const Reminder* reminders, int reminderCount, std::istream& in, std::ostream& out) {
+bool printReminders(const Reminder* reminders, int reminderCount, std::istream& in, std::ostream& out) {
     if (reminderCount == 0) {
         out << "You have no reminders.\n";
         in.get();
-        return;
+        return false;
     }
 
     out << "+------------------------------------+\n";
@@ -235,8 +507,8 @@ void printReminders(const Reminder* reminders, int reminderCount, std::istream& 
         out << "--------------------------------------\n";
     }
     in.get();
+    return true;
 }
-
 
 bool ReminderSetup(std::istream& in, std::ostream& out, bool localGuestMode) {
     if (localGuestMode) {
@@ -294,9 +566,11 @@ bool ReminderSetup(std::istream& in, std::ostream& out, bool localGuestMode) {
             printReminders(reminders, reminderCount, in, out);
             break;
         case 3:
-            return false;
+            return true;
         default:
             out << "Invalid option, please try again.\n";
+            in.get();
         }
     }
 }
+

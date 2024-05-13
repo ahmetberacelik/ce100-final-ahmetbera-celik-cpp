@@ -62,23 +62,17 @@ void BFS(Node* startNode, std::ostream& out);
 
 void DFS(Node* startNode, std::ostream& out);
 
-bool loadGraph(const char* filename);
+void loadGraph(const char* filename);
 
-bool viewUtilityUsages(std::ostream& out, int searchType);
+void viewUtilityUsages(std::ostream& out, int searchType);
 
-int findPath(int source, int sink, int parent[], Node nodes[], int numNodes);
-
-int fordFulkerson(Node nodes[], int numNodes, int source, int sink);
-
-void showMaximumFlow(std::ostream& out, Node nodes[], int numNodes);
-
-bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode);
+bool utilityLogging(std::istream& in, std::ostream& out);
 
 int saveReminder(const Reminder* reminder, const char* filename);
 
 int loadReminders(const char* username, const char* filename, Reminder* reminders, int maxReminders);
 
-bool printReminders(const Reminder* reminders, int reminderCount, std::istream& in, std::ostream& out);
+void printReminders(const Reminder* reminders, int reminderCount, std::istream& in, std::ostream& out);
 
 bool ReminderSetup(std::istream& in, std::ostream& out, bool localGuestMode);
 
