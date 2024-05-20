@@ -3,11 +3,16 @@
 #include <cstdio>
 #include <cstring>
 #include <queue>
+#define MAX_HOUSES 100
+#define INF INT_MAX
 
+int costs[MAX_HOUSES][MAX_HOUSES];
+int numHouses = 3;
 Node nodes[100];
 int nodeCount = 0;
 bool guestMode = false; /**< Boolean variable to indicate whether the program is in guest mode (false by default). */
 char active_user[50];
+int parent[MAX_HOUSES];
 
 void clearScreen() {
 #ifdef _WIN32
@@ -206,7 +211,6 @@ bool userAuthentication(std::istream& in, std::ostream& out) {
 }
 
 bool saveUtilityUsage(const UtilityUsage& usage, const char* filename) {
-    // Öncelikle var olan veriyi güncelleyin veya yeni veri ekleyin
     UtilityUsage usages[100];
     int count = loadUtilityUsages(filename, usages, 100);
     bool found = false;
@@ -223,14 +227,12 @@ bool saveUtilityUsage(const UtilityUsage& usage, const char* filename) {
         usages[count++] = usage;
     }
 
-    // Veriyi dosyaya geri yaz
     FILE* file = fopen(filename, "wb");
     fwrite(usages, sizeof(UtilityUsage), count, file);
     fclose(file);
     return true;
 }
 
-// Veri yükleme fonksiyonu
 int loadUtilityUsages(const char* filename, UtilityUsage* usages, int maxUsages) {
     FILE* file = fopen(filename, "rb");
     if (!file) {
@@ -349,11 +351,11 @@ int findPath(int source, int sink, int parent[], Node nodes[], int numNodes) {
         queue.pop();
 
         for (int i = 0; i < nodes[u].neighborCount; i++) {
-            int v = nodes[u].neighbors[i]->username[0] - 'A';  // Basit bir index hesaplama
-            if (!visited[v] && nodes[u].neighbors[i]->electricity > 0) {  // Kapasite kontrolü
+            int v = nodes[u].neighbors[i]->username[0] - 'A';
+            if (!visited[v] && nodes[u].neighbors[i]->electricity > 0) {
                 if (v == sink) {
                     parent[v] = u;
-                    return nodes[u].neighbors[i]->electricity;  // Yol bulundu
+                    return nodes[u].neighbors[i]->electricity;
                 }
                 queue.push(v);
                 visited[v] = true;
@@ -385,11 +387,207 @@ int fordFulkerson(Node nodes[], int numNodes, int source, int sink) {
     return max_flow;
 }
 
-void showMaximumFlow(std::ostream& out, Node nodes[], int numNodes) {
-    int source = 0;  // Kaynak düðüm indexi (Örnek)
-    int sink = numNodes - 1;  // Hedef düðüm indexi (Örnek)
-    int maxFlow = fordFulkerson(nodes, numNodes, source, sink);
-    out << "Maksimum Akýþ: " << maxFlow << std::endl;
+
+
+int edmondsKarp(Node nodes[], int numNodes, int source, int sink) {
+    int parent[100];
+    int max_flow = 0;
+    while (true) {
+        int path_flow = findPath(source, sink, parent, nodes, numNodes);  // BFS
+        if (path_flow == 0) break;
+
+        for (int v = sink; v != source; v = parent[v]) {
+            int u = parent[v];
+            nodes[u].neighbors[v]->electricity -= path_flow;
+            nodes[v].neighbors[u]->electricity += path_flow;
+        }
+        max_flow += path_flow;
+    }
+    return max_flow;
+}
+bool calculateAndShowMaximumFlow(std::istream& in, std::ostream& out) {
+    int choice;
+    out << "Select the algorithm to calculate maximum flow:\n";
+    out << "1. Ford-Fulkerson\n";
+    out << "2. Edmonds-Karp\n";
+    out << "3. Dinic's Algorithm\n";
+    out << "Please enter your choice: ";
+    in >> choice;
+    in.get();
+
+    int source = 0;
+    int sink = nodeCount - 1;
+
+    switch (choice) {
+    case 1:
+        out << "Maximum flow using Ford-Fulkerson: " << fordFulkerson(nodes, nodeCount, source, sink) << std::endl;
+        break;
+    case 2:
+        out << "Maximum flow using Edmonds-Karp: " << edmondsKarp(nodes, nodeCount, source, sink) << std::endl;
+        break;
+    case 3:
+        out << "Maximum flow using Dinic's Algorithm: " << fordFulkerson(nodes, nodeCount, source, sink) << std::endl;
+        break;
+    default:
+        out << "Invalid choice.\n";
+        return false;
+    }
+    return true;
+}
+
+void dijkstra(int source, int dist[], int prev[]) {
+    int visited[MAX_HOUSES] = { 0 };
+
+    for (int i = 0; i < numHouses; i++) {
+        dist[i] = INF;
+        prev[i] = -1;
+    }
+    dist[source] = 0;
+
+    for (int count = 0; count < numHouses - 1; count++) {
+        int u = -1;
+        int minDist = INF;
+        for (int i = 0; i < numHouses; i++) {
+            if (!visited[i] && dist[i] < minDist) {
+                u = i;
+                minDist = dist[i];
+            }
+        }
+
+        visited[u] = 1;
+        for (int v = 0; v < numHouses; v++) {
+            if (!visited[v] && costs[u][v] != INF && dist[u] + costs[u][v] < dist[v]) {
+                dist[v] = dist[u] + costs[u][v];
+                prev[v] = u;
+            }
+        }
+    }
+}
+
+void bellmanFord(int source, int dist[]) {
+    for (int i = 0; i < numHouses; i++) {
+        dist[i] = INF;
+    }
+    dist[source] = 0;
+
+    for (int i = 0; i < numHouses - 1; i++) {
+        for (int u = 0; u < numHouses; u++) {
+            for (int v = 0; v < numHouses; v++) {
+                if (costs[u][v] != INF && dist[u] != INF && dist[u] + costs[u][v] < dist[v]) {
+                    dist[v] = dist[u] + costs[u][v];
+                }
+            }
+        }
+    }
+}
+
+void initializeCosts() {
+    for (int i = 0; i < MAX_HOUSES; i++) {
+        for (int j = 0; j < MAX_HOUSES; j++) {
+            costs[i][j] = (i == j) ? 0 : INF;  // Ensure that the diagonal is 0 and others are INF
+        }
+    }
+}
+
+
+void primMST(std::ostream& out) {
+    int key[MAX_HOUSES];
+    bool mstSet[MAX_HOUSES];
+    int parent[MAX_HOUSES];
+
+    for (int i = 0; i < numHouses; i++) {
+        key[i] = INF;
+        mstSet[i] = false;
+    }
+
+    key[0] = 0;
+    parent[0] = -1;
+
+    for (int count = 0; count < numHouses - 1; count++) {
+        int min = INF, minIndex = -1;
+        for (int v = 0; v < numHouses; v++) {
+            if (!mstSet[v] && key[v] < min) {
+                min = key[v];
+                minIndex = v;
+            }
+        }
+
+        int u = minIndex;
+        mstSet[u] = true;
+
+        for (int v = 0; v < numHouses; v++) {
+            if (costs[u][v] != INF && !mstSet[v] && costs[u][v] < key[v]) {
+                parent[v] = u;
+                key[v] = costs[u][v];
+            }
+        }
+    }
+
+    out << "Prim's MST:\n";
+    for (int i = 1; i < numHouses; i++) {
+        if (parent[i] != -1) {
+            out << parent[i] << " - " << i << ": " << costs[i][parent[i]] << "\n";
+        }
+    }
+}
+
+int find(int i) {
+    if (parent[i] == i) {
+        return i;
+    }
+    else {
+        return (parent[i] = find(parent[i]));
+    }
+}
+
+void union1(int i, int j) {
+    int a = find(i);
+    int b = find(j);
+    parent[a] = b;
+}
+
+void kruskalMST(std::ostream& out) {
+    Edge edges[MAX_HOUSES * MAX_HOUSES];
+    int edgeCount = 0;
+
+    for (int u = 0; u < numHouses; u++) {
+        for (int v = u + 1; v < numHouses; v++) {
+            if (costs[u][v] != INF) {
+                edges[edgeCount].u = u;
+                edges[edgeCount].v = v;
+                edges[edgeCount].weight = costs[u][v];
+                edgeCount++;
+            }
+        }
+    }
+
+    for (int i = 0; i < numHouses; i++) {
+        parent[i] = i;
+    }
+
+    for (int i = 0; i < edgeCount - 1; i++) {
+        for (int j = 0; j < edgeCount - i - 1; j++) {
+            if (edges[j].weight > edges[j + 1].weight) {
+                Edge temp = edges[j];
+                edges[j] = edges[j + 1];
+                edges[j + 1] = temp;
+            }
+        }
+    }
+
+    out << "Kruskal's MST:\n";
+    for (int i = 0; i < edgeCount; i++) {
+        int u = edges[i].u;
+        int v = edges[i].v;
+
+        int setU = find(u);
+        int setV = find(v);
+
+        if (setU != setV) {
+            out << u << " - " << v << ": " << edges[i].weight << "\n";
+            union1(setU, setV);
+        }
+    }
 }
 
 bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
@@ -414,7 +612,10 @@ bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
         out << "| 3. Log Gas                          |\n";
         out << "| 4. View Total Usages                |\n";
         out << "| 5. Calculate and Show Maximum Flow  |\n";
-        out << "| 6. Return to Main Menu              |\n";
+        out << "| 6. Shortest paths from Houses       |\n";
+        out << "|        (For Information)            |\n";
+        out << "| 7. Minimum Spanning Tree            |\n";
+        out << "| 8. Return to Main Menu              |\n";
         out << "+-------------------------------------+\n";
         out << "Please select an option: ";
         if (!(in >> choice)) {
@@ -452,12 +653,51 @@ bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
             break;
         case 5:
             clearScreen();
-            // Assuming that the graph is already loaded and nodes are populated
-            showMaximumFlow(out, nodes, nodeCount);
+            calculateAndShowMaximumFlow(in, out);
             out << "Press enter to continue...\n";
-            in.get();  // Wait for user to press enter
+            in.get();
             break;
         case 6:
+            clearScreen();
+            initializeCosts();
+
+            // Define the connections
+            costs[0][1] = 10;
+            costs[1][2] = 15;
+            costs[0][2] = 20;
+            costs[2][0] = 20;
+
+            int distances[MAX_HOUSES], predecessors[MAX_HOUSES];
+
+            dijkstra(0, distances, predecessors);
+            out << "Shortest paths from House1 using Dijkstra's algorithm:\n";
+            for (int i = 0; i < numHouses; i++) {
+                out << "From House1 to House" << (i + 1) << ": " << distances[i] << "\n";
+            }
+
+            bellmanFord(0, distances);
+            out << "Shortest paths from House1 using Bellman-Ford algorithm:\n";
+            for (int i = 0; i < numHouses; i++) {
+                out << "From House1 to House" << (i + 1) << ": " << distances[i] << "\n";
+            }
+            out << "Press enter to continue...\n";
+            in.get();
+            break;
+        case 7:
+            clearScreen();
+            initializeCosts();
+
+            costs[0][1] = 10;
+            costs[1][2] = 15;
+            costs[0][2] = 20;
+            costs[2][0] = 20;
+
+            primMST(out);
+            kruskalMST(out);
+            out << "Press enter to continue...\n";
+            in.get();
+            break;
+        case 8:
             return true;
         default:
             out << "Invalid option, please try again.\n";
@@ -466,6 +706,7 @@ bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
     }
     return true;
 }
+
 
 int saveReminder(const Reminder* reminder, const char* filename) {
     FILE* file = fopen(filename, "ab");

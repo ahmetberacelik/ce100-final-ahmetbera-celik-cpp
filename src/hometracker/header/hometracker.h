@@ -44,6 +44,10 @@ struct Node {
     }
 };
 
+typedef struct {
+    int u, v, weight;
+} Edge;
+
 void clearScreen();
 
 bool mainMenu(bool authenticationResult, std::istream& in, std::ostream& out);
@@ -64,13 +68,29 @@ void DFS(Node* startNode, std::ostream& out);
 
 bool loadGraph(const char* filename);
 
-bool viewUtilityUsages(std::ostream& out, int searchType);
+bool viewUtilityUsages(std::istream& in, std::ostream& out, int searchType);
 
 int findPath(int source, int sink, int parent[], Node nodes[], int numNodes);
 
 int fordFulkerson(Node nodes[], int numNodes, int source, int sink);
 
-void showMaximumFlow(std::ostream& out, Node nodes[], int numNodes);
+int edmondsKarp(Node nodes[], int numNodes, int source, int sink);
+
+bool calculateAndShowMaximumFlow(std::istream& in, std::ostream& out);
+
+void dijkstra(int source, int dist[], int prev[]);
+
+void bellmanFord(int source, int dist[]);
+
+void initializeCosts();
+
+void primMST(std::ostream& out);
+
+int find(int i);
+
+void union1(int i, int j);
+
+void kruskalMST(std::ostream& out);
 
 bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode);
 
