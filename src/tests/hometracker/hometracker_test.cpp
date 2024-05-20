@@ -5,14 +5,50 @@
 
 class HometrackerTest : public ::testing::Test {
 protected:
+	std::ostringstream out;
+	std::istringstream in;
 	void SetUp() override {
-		// Setup test data
+		out.str("");
+		out.clear();
 	}
 
 	void TearDown() override {
 		// Clean up test data
 	}
+	void simulateUserInput(const std::string& input) {
+		in.str(input);
+		in.clear();
+	}
 };
+
+TEST_F(HometrackerTest, LoginGuestModeTest) {
+
+	simulateUserInput("3\n");
+
+	bool authResult = userAuthentication(in, out);
+
+	EXPECT_TRUE(authResult);
+}
+
+TEST_F(HometrackerTest, ExitUserAuthenticationTest) {
+
+	simulateUserInput("4\n");
+
+	bool authResult = userAuthentication(in, out);
+
+	EXPECT_FALSE(authResult);
+}
+
+TEST_F(HometrackerTest, UserAuthenticationInvalidInputTest) {
+	simulateUserInput("invalid\n\n4\n");
+
+
+	bool authResult = userAuthentication(in, out);
+
+	EXPECT_FALSE(authResult);
+}
+
+
 
 /**
  * @brief The main function of the test program.
