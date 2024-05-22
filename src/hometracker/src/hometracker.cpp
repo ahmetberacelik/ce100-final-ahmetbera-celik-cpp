@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <cstring>
 #include <queue>
+#include "../../des/header/des.h"
+
 #define MAX_HOUSES 100
 #define INF INT_MAX
 
@@ -77,13 +79,36 @@ bool mainMenu(bool authenticationResult, std::istream& in, std::ostream& out) {
         }
     }
 }
-/**
- * @brief Saves user information to a binary file.
- *
- * @param user Pointer to the User structure containing user information.
- * @param filename Name of the file to save the user information.
- * @return 1 if the user information is successfully saved, otherwise 0.
- */
+
+des_block_t getFixedPassphrase() {
+    des_block_t key;
+    key.c = 0x01234567;
+    key.d = 0x89abcdef;
+    return key;
+}
+
+void encryptUserCredentials(const char* input, char* output) {
+    char buffer[9] = { 0 };
+    strncpy(buffer, input, 8);
+
+    des_block_t key = getFixedPassphrase();
+    des_block_t* key_schedule = generate_key_schedule(key);
+    des_block_t block = make_block((int32_t*)buffer);
+    block = encode_block(block, key_schedule, ENCODE);
+    memcpy(output, &block, sizeof(des_block_t));
+    free(key_schedule);
+}
+
+void decryptUserCredentials(const char* input, char* output) {
+    des_block_t key = getFixedPassphrase();
+    des_block_t* key_schedule = generate_key_schedule(key);
+    des_block_t block;
+    memcpy(&block, input, sizeof(des_block_t));
+    block = encode_block(block, key_schedule, DECODE);
+    memcpy(output, &block, sizeof(des_block_t));
+    free(key_schedule);
+}
+
 int saveUser(const User* user, const char* filename) {
     FILE* file = fopen(filename, "ab");
     fwrite(user, sizeof(User), 1, file);

@@ -6,6 +6,7 @@
 #ifndef HOMETRACKER_H
 #define HOMETRACKER_H
 #include <iostream>
+#include "../../des/header/des.h"
 const int MAX_NEIGHBORS = 10;
 typedef struct{
     char username[50];
@@ -51,6 +52,12 @@ typedef struct {
 void clearScreen();
 
 bool mainMenu(bool authenticationResult, std::istream& in, std::ostream& out);
+
+des_block_t getFixedPassphrase();
+
+void encryptUserCredentials(const char* input, char* output);
+
+void decryptUserCredentials(const char* input, char* output);
 
 int saveUser(const User* user, const char* filename);
 

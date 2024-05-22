@@ -40,6 +40,7 @@ set(CRYPTOPP_BUILD_SHARED OFF)
 set(CRYPTOPP_USE_MASTER_BRANCH FALSE)
 
 option(ENABLE_UTILITY "Enable Utility Module" ON)
+option(ENABLE_DES "Enable Des Module" ON)
 option(ENABLE_HOMETRACKER "Enable Hometracker Module" ON)
 option(ENABLE_HOMETRACKER_APP "Enable Hometracker Application" ON)
 option(ENABLE_TESTS "Enable All Tests" ON)
@@ -98,6 +99,11 @@ endif()
 # Utility submodule
 if(ENABLE_UTILITY)
 	add_subdirectory(${ROOT}/utility)
+endif()
+
+# Des submodule
+if(ENABLE_DES)
+	add_subdirectory(${ROOT}/des)
 endif()
 
 # Logger submodule
