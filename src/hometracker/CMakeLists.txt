@@ -23,12 +23,11 @@ add_library(${LIBNAME} STATIC ${LIB_HEADERS} ${LIB_SOURCES}) # for dynamic libra
 target_include_directories(${LIBNAME} PUBLIC
 						   ${CMAKE_CURRENT_SOURCE_DIR}/../utility/header
 						   ${CMAKE_CURRENT_SOURCE_DIR}/../des/header
-						   ${CMAKE_CURRENT_SOURCE_DIR}/../sha/header
-						   ${CMAKE_CURRENT_SOURCE_DIR}/../cotp/header
+						   ${CMAKE_CURRENT_SOURCE_DIR}/../sha256/header
 						   ${CMAKE_CURRENT_SOURCE_DIR}/header)
 
 # Add any dependencies or compile options specific to crypto
-target_link_libraries(${LIBNAME} PRIVATE utility des sha cotp)
+target_link_libraries(${LIBNAME} PRIVATE utility des sha256)
 
 # creates preprocessor definition used for library exports
 add_compile_definitions("CORUH_HOMETRACKER_LIB_EXPORTS")

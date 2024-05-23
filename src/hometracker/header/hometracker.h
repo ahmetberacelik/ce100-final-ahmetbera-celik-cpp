@@ -49,6 +49,10 @@ typedef struct {
     int u, v, weight;
 } Edge;
 
+const double ELECTRICITY_PRICE_PER_KWH = 0.145;
+const double WATER_PRICE_PER_CUBIC_METER = 1.30;
+const double GAS_PRICE_PER_CUBIC_METER = 0.75;
+
 void clearScreen();
 
 bool mainMenu(bool authenticationResult, std::istream& in, std::ostream& out);
@@ -102,6 +106,10 @@ void union1(int i, int j);
 void kruskalMST(std::ostream& out);
 
 bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode);
+
+bool calculateAndShowExpenses(std::istream& in, std::ostream& out, const char* activeUser, bool guestMode);
+
+void showTrendAnalysis(std::istream& in, std::ostream& out);
 
 int saveReminder(const Reminder* reminder, const char* filename);
 

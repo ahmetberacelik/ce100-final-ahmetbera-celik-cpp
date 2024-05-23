@@ -113,11 +113,6 @@ if(ENABLE_SHA256)
 	add_subdirectory(${ROOT}/sha256)
 endif()
 
-# OTP submodule
-if(ENABLE_COTP)
-	add_subdirectory(${ROOT}/cotp)
-endif()
-
 # Logger submodule
 if(ENABLE_HOMETRACKER)
 	add_subdirectory(${ROOT}/hometracker)

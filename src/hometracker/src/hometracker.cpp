@@ -5,7 +5,6 @@
 #include <queue>
 #include "../../des/header/des.h"
 #include "../../sha256/header/sha256.h"
-#include "../../cotp/header/cotp.h"
 
 #define MAX_HOUSES 100
 #define INF INT_MAX
@@ -63,10 +62,10 @@ bool mainMenu(bool authenticationResult, std::istream& in, std::ostream& out) {
             utilityLogging(in, out, guestMode);
             break;
         case 2:
-            out << "Hi\n";
+            calculateAndShowExpenses(in, out, active_user, guestMode);
             break;
         case 3:
-            out << "Hi\n";
+            showTrendAnalysis(in, out);
             break;
         case 4:
             ReminderSetup(in, out, guestMode);
@@ -113,33 +112,6 @@ void decryptUserCredentials(const char* input, char* output) {
 
 void hashPassword(const char* password, char* outputHash) {
     sha256_hex(password, strlen(password), outputHash);
-}
-
-int hmac_sha1(const char* key, int key_length, const char* input, char* output) {
-    for (int i = 0; i < 20; ++i) { 
-        output[i] = i + 1;
-    }
-    return 20;
-}
-
-void generate_hotp() {
-    OTPData data;
-    const char* base32_secret = "JBSWY3DPEHPK3PXP";
-    uint32_t digits = 6;
-    uint64_t count = 1;
-
-    OTPData* hotpData = hotp_new(&data, base32_secret, hmac_sha1, digits, count);
-
-    char otp_output[10] = { 0 };
-
-    if (hotp_next(hotpData, otp_output) == OTP_OK) {
-        std::cout << "Generated HOTP: " << otp_output << std::endl;
-    }
-    else {
-        std::cout << "Failed to generate HOTP." << std::endl;
-    }
-
-    otp_free(hotpData);
 }
 
 int saveUser(const User* user, const char* filename) {
@@ -302,6 +274,39 @@ int loadUtilityUsages(const char* filename, UtilityUsage* usages, int maxUsages)
     }
     fclose(file);
     return count;
+}
+
+int lcs(char* X, char* Y, int m, int n)
+{
+    int** L;
+    L = (int**)malloc((m + 1) * sizeof(int*));
+    for (int i = 0; i <= m; i++) {
+        L[i] = (int*)malloc((n + 1) * sizeof(int));
+    }
+
+    int i, j;
+
+    for (i = 0; i <= m; i++)
+    {
+        for (j = 0; j <= n; j++)
+        {
+            if (i == 0 || j == 0)
+                L[i][j] = 0;
+            else if (X[i - 1] == Y[j - 1])
+                L[i][j] = L[i - 1][j - 1] + 1;
+            else
+                L[i][j] = (L[i - 1][j] > L[i][j - 1]) ? L[i - 1][j] : L[i][j - 1];
+        }
+    }
+
+    int result = L[m][n];
+
+    for (int i = 0; i <= m; i++) {
+        free(L[i]);
+    }
+    free(L);
+
+    return result;
 }
 
 void BFS(Node* startNode, std::ostream& out) {
@@ -764,6 +769,66 @@ bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
     }
     return true;
 }
+
+bool calculateAndShowExpenses(std::istream& in, std::ostream& out, const char* activeUser, bool guestMode) {
+    if (guestMode) {
+        out << "Guest mode does not have permission to access expense calculation.\n";
+        in.get();
+        return false;
+    }
+
+    const char* filename = "utility_usages.bin";
+    UtilityUsage usages[100];
+    int count = loadUtilityUsages(filename, usages, 100);
+
+    if (count == 0) {
+        out << "No utility data found.\n";
+        in.get();
+        return false;
+    }
+
+    bool found = false;
+    for (int i = 0; i < count; i++) {
+        if (strcmp(usages[i].username, activeUser) == 0) {
+            found = true;
+            // Maliyet hesaplamalarý
+            double electricity_cost = usages[i].electricity * ELECTRICITY_PRICE_PER_KWH;
+            double water_cost = usages[i].water * WATER_PRICE_PER_CUBIC_METER;
+            double gas_cost = usages[i].gas * GAS_PRICE_PER_CUBIC_METER;
+            double total_cost = electricity_cost + water_cost + gas_cost;
+
+            // Maliyetleri göster
+            out << "Electricity cost: $" << electricity_cost << std::endl;
+            out << "Water cost: $" << water_cost << std::endl;
+            out << "Gas cost: $" << gas_cost << std::endl;
+            out << "Total utility cost: $" << total_cost << std::endl;
+            in.get();
+            return true;
+        }
+    }
+    if (!found) {
+        out << "No utility data found for the user: " << activeUser << ".\n";
+        in.get();
+        return false;
+    }
+}
+
+void showTrendAnalysis(std::istream& in, std::ostream& out) {
+    clearScreen();
+    const int totalElectricityUsage = 546515;
+    const int totalWaterUsage = 3193746;
+    const int totalGasUsage = 2843973;
+
+    out << "+-------------------------------------+\n";
+    out << "|           Trend Analysis            |\n";
+    out << "+-------------------------------------+\n";
+    out << "Countrywide electricity usage: " << totalElectricityUsage << " kWh\n";
+    out << "Countrywide water usage: " << totalWaterUsage << " cubic meters\n";
+    out << "Countrywide gas usage: " << totalGasUsage << " cubic meters\n";
+    out << "+-------------------------------------+\n";
+    in.get();
+}
+
 
 
 int saveReminder(const Reminder* reminder, const char* filename) {
