@@ -5,6 +5,7 @@
 #include <queue>
 #include "../../des/header/des.h"
 #include "../../sha256/header/sha256.h"
+#include "../../cotp/header/cotp.h"
 
 #define MAX_HOUSES 100
 #define INF INT_MAX
@@ -112,6 +113,33 @@ void decryptUserCredentials(const char* input, char* output) {
 
 void hashPassword(const char* password, char* outputHash) {
     sha256_hex(password, strlen(password), outputHash);
+}
+
+int hmac_sha1(const char* key, int key_length, const char* input, char* output) {
+    for (int i = 0; i < 20; ++i) { 
+        output[i] = i + 1;
+    }
+    return 20;
+}
+
+void generate_hotp() {
+    OTPData data;
+    const char* base32_secret = "JBSWY3DPEHPK3PXP";
+    uint32_t digits = 6;
+    uint64_t count = 1;
+
+    OTPData* hotpData = hotp_new(&data, base32_secret, hmac_sha1, digits, count);
+
+    char otp_output[10] = { 0 };
+
+    if (hotp_next(hotpData, otp_output) == OTP_OK) {
+        std::cout << "Generated HOTP: " << otp_output << std::endl;
+    }
+    else {
+        std::cout << "Failed to generate HOTP." << std::endl;
+    }
+
+    otp_free(hotpData);
 }
 
 int saveUser(const User* user, const char* filename) {

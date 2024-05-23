@@ -42,6 +42,7 @@ set(CRYPTOPP_USE_MASTER_BRANCH FALSE)
 option(ENABLE_UTILITY "Enable Utility Module" ON)
 option(ENABLE_DES "Enable Des Module" ON)
 option(ENABLE_SHA256 "Enable SHA256 Module" ON)
+option(ENABLE_COTP "Enable Cotp Module" ON)
 option(ENABLE_HOMETRACKER "Enable Hometracker Module" ON)
 option(ENABLE_HOMETRACKER_APP "Enable Hometracker Application" ON)
 option(ENABLE_TESTS "Enable All Tests" ON)
@@ -110,6 +111,11 @@ endif()
 # Sha256 submodule
 if(ENABLE_SHA256)
 	add_subdirectory(${ROOT}/sha256)
+endif()
+
+# OTP submodule
+if(ENABLE_COTP)
+	add_subdirectory(${ROOT}/cotp)
 endif()
 
 # Logger submodule
