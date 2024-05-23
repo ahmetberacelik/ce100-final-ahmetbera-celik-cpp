@@ -59,6 +59,8 @@ void encryptUserCredentials(const char* input, char* output);
 
 void decryptUserCredentials(const char* input, char* output);
 
+void hashPassword(const char* password, char* outputHash);
+
 int saveUser(const User* user, const char* filename);
 
 int authenticateUser(const char* username, const char* password, const char* filename);

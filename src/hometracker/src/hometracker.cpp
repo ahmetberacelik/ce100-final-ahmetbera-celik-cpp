@@ -4,6 +4,7 @@
 #include <cstring>
 #include <queue>
 #include "../../des/header/des.h"
+#include "../../sha256/header/sha256.h"
 
 #define MAX_HOUSES 100
 #define INF INT_MAX
@@ -107,6 +108,10 @@ void decryptUserCredentials(const char* input, char* output) {
     block = encode_block(block, key_schedule, DECODE);
     memcpy(output, &block, sizeof(des_block_t));
     free(key_schedule);
+}
+
+void hashPassword(const char* password, char* outputHash) {
+    sha256_hex(password, strlen(password), outputHash);
 }
 
 int saveUser(const User* user, const char* filename) {

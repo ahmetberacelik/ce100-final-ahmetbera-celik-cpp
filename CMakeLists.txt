@@ -41,6 +41,7 @@ set(CRYPTOPP_USE_MASTER_BRANCH FALSE)
 
 option(ENABLE_UTILITY "Enable Utility Module" ON)
 option(ENABLE_DES "Enable Des Module" ON)
+option(ENABLE_SHA256 "Enable SHA256 Module" ON)
 option(ENABLE_HOMETRACKER "Enable Hometracker Module" ON)
 option(ENABLE_HOMETRACKER_APP "Enable Hometracker Application" ON)
 option(ENABLE_TESTS "Enable All Tests" ON)
@@ -104,6 +105,11 @@ endif()
 # Des submodule
 if(ENABLE_DES)
 	add_subdirectory(${ROOT}/des)
+endif()
+
+# Sha256 submodule
+if(ENABLE_SHA256)
+	add_subdirectory(${ROOT}/sha256)
 endif()
 
 # Logger submodule
