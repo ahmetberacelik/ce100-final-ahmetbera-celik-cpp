@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <queue>
+#include <climits>
 #include "../../des/header/des.h"
 #include "../../sha256/header/sha256.h"
 
@@ -130,9 +131,8 @@ int saveUser(const User* user, const char* filename) {
  */
 int authenticateUser(const char* username, const char* password, const char* filename) {
     FILE* file = fopen(filename, "rb");
-    if (!file) {
-        return -1;
-    }
+    if (!file) return -1;
+
     User user;
     while (fread(&user, sizeof(User), 1, file)) {
         if (strcmp(user.username, username) == 0 && strcmp(user.password, password) == 0) {
@@ -193,8 +193,7 @@ bool userAuthentication(std::istream& in, std::ostream& out) {
                 out << "Welcome " << temp_username << "\n";
                 strcpy(active_user, temp_username);
                 in.get();
-                return true;
-            }
+                return true; }
             else {
                 out << "You entered wrong username or password. Please try again.\n";
                 right_to_try--;
@@ -251,8 +250,7 @@ bool saveUtilityUsage(const UtilityUsage& usage, const char* filename) {
             usages[i].gas = usage.gas;
             found = true;
             break;
-        }
-    }
+        } }
     if (!found) {
         usages[count++] = usage;
     }
@@ -370,12 +368,9 @@ bool loadGraph(const char* filename) {
             nodes[nodeCount].gas = usages[i].gas;
             nodeCount++;
             break;  // Since only one user's data is needed
-        }
-    }
+        } }
     return true;
 }
-
-
 
 bool viewUtilityUsages(std::istream& in, std::ostream& out, int searchType) {
     if (nodeCount == 0) {
@@ -385,7 +380,7 @@ bool viewUtilityUsages(std::istream& in, std::ostream& out, int searchType) {
 
     out << "Select search method:\n1. BFS\n2. DFS\n";
     int choice;
-    std::cin >> choice;
+    in >> choice;
 
     if (choice == 1) {
         out << "Utility usages (BFS) for " << active_user << ":\n";
@@ -401,6 +396,7 @@ bool viewUtilityUsages(std::istream& in, std::ostream& out, int searchType) {
     in.get();
     return true;
 }
+
 
 int findPath(int source, int sink, int parent[], Node nodes[], int numNodes) {
     bool visited[100] = { false };
@@ -596,8 +592,7 @@ void primMST(std::ostream& out) {
 
 int find(int i) {
     if (parent[i] == i) {
-        return i;
-    }
+        return i; }
     else {
         return (parent[i] = find(parent[i]));
     }
@@ -767,10 +762,10 @@ bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
             in.get();
         }
     }
-    return true;
 }
 
 bool calculateAndShowExpenses(std::istream& in, std::ostream& out, const char* activeUser, bool guestMode) {
+    clearScreen();
     if (guestMode) {
         out << "Guest mode does not have permission to access expense calculation.\n";
         in.get();
@@ -781,23 +776,17 @@ bool calculateAndShowExpenses(std::istream& in, std::ostream& out, const char* a
     UtilityUsage usages[100];
     int count = loadUtilityUsages(filename, usages, 100);
 
-    if (count == 0) {
-        out << "No utility data found.\n";
-        in.get();
-        return false;
-    }
+    if (count == 0) out << "No utility data found.\n"; in.get(); return false;
 
     bool found = false;
     for (int i = 0; i < count; i++) {
         if (strcmp(usages[i].username, activeUser) == 0) {
             found = true;
-            // Maliyet hesaplamalarý
             double electricity_cost = usages[i].electricity * ELECTRICITY_PRICE_PER_KWH;
             double water_cost = usages[i].water * WATER_PRICE_PER_CUBIC_METER;
             double gas_cost = usages[i].gas * GAS_PRICE_PER_CUBIC_METER;
             double total_cost = electricity_cost + water_cost + gas_cost;
 
-            // Maliyetleri göster
             out << "Electricity cost: $" << electricity_cost << std::endl;
             out << "Water cost: $" << water_cost << std::endl;
             out << "Gas cost: $" << gas_cost << std::endl;
@@ -844,9 +833,7 @@ int loadReminders(const char* username, const char* filename, Reminder* reminder
     while (fread(&reminders[reminderCount], sizeof(Reminder), 1, file)) {
         if (strcmp(reminders[reminderCount].username, username) == 0) {
             reminderCount++;
-            if (reminderCount >= maxReminders) {
-                break;
-            }
+            if (reminderCount >= maxReminders) break;
         }
     }
     fclose(file);

@@ -6,6 +6,9 @@
 #ifndef HOMETRACKER_H
 #define HOMETRACKER_H
 #include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <climits>
 #include "../../des/header/des.h"
 const int MAX_NEIGHBORS = 10;
 typedef struct{
@@ -74,6 +77,8 @@ bool userAuthentication(std::istream& in, std::ostream& out);
 bool saveUtilityUsage(const UtilityUsage& usage, const char* filename);
 
 int loadUtilityUsages(const char* filename, UtilityUsage* usages, int maxUsages);
+
+int lcs(char* X, char* Y, int m, int n);
 
 void BFS(Node* startNode, std::ostream& out);
 

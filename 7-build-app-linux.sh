@@ -93,10 +93,8 @@ lcov --rc lcov_branch_coverage=1 --remove coverage_linux.info 'tests/*' --output
 lcov --rc lcov_branch_coverage=1 --list coverage_linux.info
 
 echo "Generate Test Report"
-reportgenerator "-title:Hometracker Library Unit Test Coverage Report (Linux)" "-reports:**/coverage_linux.info" "-targetdir:docs/coveragereportliblinux" "-reporttypes:Html" 
-
-"-sourcedirs:src/utility/src;src/utility/header;src/hometracker/src;src/hometracker/header;src/hometrackerapp/src;src/hometrackerapp/header;src/tests/utility;src/tests/hometracker" "-filefilters:-*minkernel\*;-*gtest*;-*a\_work\*;-*gtest-*;-*gtest.cc;-*gtest.h;-*build*" "-historydir:report_test_hist_linux"
-reportgenerator "-reports:**/coverage_linux.info" "-targetdir:assets/codecoverageliblinux" "-reporttypes:Badges" "-sourcedirs:src/utility/src;src/utility/header;src/hometracker/src;src/hometracker/header;src/hometrackerapp/src;src/hometrackerapp/header;src/tests/utility;src/tests/hometracker" "-filefilters:-*minkernel\*;-*gtest*;-*a\_work\*;-*gtest-*;-*gtest.cc;-*gtest.h;-*build*"
+reportgenerator "-title:Hometracker Library Unit Test Coverage Report (Linux)" "-reports:**/coverage_linux.info" "-targetdir:docs/coveragereportliblinux" "-reporttypes:Html" "-sourcedirs:src/utility/src;src/utility/header;src/hometracker/src;src/hometracker/header;src/hometrackerapp/src;src/hometrackerapp/header;src/tests/utility;src/tests/hometracker" "-filefilters:-*minkernel\*;-*des.cpp;-*sha256.cpp;-*gtest*;-*a\_work\*;-*gtest-*;-*gtest.cc;-*gtest.h;-*build*" "-historydir:report_test_hist_linux"
+reportgenerator "-reports:**/coverage_linux.info" "-targetdir:assets/codecoverageliblinux" "-reporttypes:Badges" "-sourcedirs:src/utility/src;src/utility/header;src/hometracker/src;src/hometracker/header;src/hometrackerapp/src;src/hometrackerapp/header;src/tests/utility;src/tests/hometracker" "-filefilters:-*minkernel\*;-*des.cpp;-*sha256.cpp;-*gtest*;-*a\_work\*;-*gtest-*;-*gtest.cc;-*gtest.h;-*build*"
 
 echo "Copy the 'assets' folder and its contents to 'docs' recursively"
 cp -R assets "docs/assets"
