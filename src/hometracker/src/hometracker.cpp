@@ -1,3 +1,8 @@
+/**
+ * @file farmermarket.cpp
+ *
+ * @brief The functions are filled in this file.
+ */
 #include "../header/hometracker.h"
 #include <iostream>
 #include <cstdio>
@@ -6,18 +11,24 @@
 #include <climits>
 #include "../../des/header/des.h"
 #include "../../sha256/header/sha256.h"
+#include "../../aes/header/aes.h"
 
-#define MAX_HOUSES 100
-#define INF INT_MAX
+#define MAX_HOUSES 100/** Maximum number of houses. */
+#define INF INT_MAX /** Infinity value for representing unreachable distances. */
 
-int costs[MAX_HOUSES][MAX_HOUSES];
-int numHouses = 3;
-Node nodes[100];
-int nodeCount = 0;
+int costs[MAX_HOUSES][MAX_HOUSES]; /** 2D array representing the costs (distances) between houses. */
+
+int numHouses = 3;/** Number of houses in the graph. */
+Node nodes[100];/** Array of nodes representing utility usage data. */
+int nodeCount = 0;/** Number of nodes currently in use. */
 bool guestMode = false; /**< Boolean variable to indicate whether the program is in guest mode (false by default). */
-char active_user[50];
-int parent[MAX_HOUSES];
 
+char active_user[50]; /** Username of the currently active user. */
+
+int parent[MAX_HOUSES];/** Array to store parent information for graph algorithms. */
+/**
+ * @brief Clears the console screen.
+ */
 void clearScreen() {
 #ifdef _WIN32
     system("cls");
@@ -81,14 +92,25 @@ bool mainMenu(bool authenticationResult, std::istream& in, std::ostream& out) {
         }
     }
 }
-
+/**
+ * @brief Generates a fixed DES key for encrypting and decrypting user credentials.
+ *
+ * This function returns a fixed DES key represented by a des_block_t struct.
+ *
+ * @return The fixed DES key.
+ */
 des_block_t getFixedPassphrase() {
     des_block_t key;
     key.c = 0x01234567;
     key.d = 0x89abcdef;
     return key;
 }
-
+/**
+ * @brief Encrypts user credentials using DES encryption.
+ *
+ * @param input The input user credentials to be encrypted.
+ * @param output The output buffer to store the encrypted credentials.
+ */
 void encryptUserCredentials(const char* input, char* output) {
     char buffer[9] = { 0 };
     strncpy(buffer, input, 8);
@@ -100,7 +122,12 @@ void encryptUserCredentials(const char* input, char* output) {
     memcpy(output, &block, sizeof(des_block_t));
     free(key_schedule);
 }
-
+/**
+ * @brief Decrypts user credentials using DES decryption.
+ *
+ * @param input The input encrypted user credentials.
+ * @param output The output buffer to store the decrypted credentials.
+ */
 void decryptUserCredentials(const char* input, char* output) {
     des_block_t key = getFixedPassphrase();
     des_block_t* key_schedule = generate_key_schedule(key);
@@ -110,11 +137,26 @@ void decryptUserCredentials(const char* input, char* output) {
     memcpy(output, &block, sizeof(des_block_t));
     free(key_schedule);
 }
-
+/**
+ * @brief Computes the SHA-256 hash of a password.
+ *
+ * This function computes the SHA-256 hash of the given password and stores the result in outputHash.
+ *
+ * @param password The password to be hashed.
+ * @param outputHash The buffer to store the resulting hash.
+ */
 void hashPassword(const char* password, char* outputHash) {
     sha256_hex(password, strlen(password), outputHash);
 }
-
+/**
+ * @brief Saves user data to a file.
+ *
+ * This function appends the user data to the specified file.
+ *
+ * @param user Pointer to the User structure containing the user data.
+ * @param filename The name of the file to save the user data to.
+ * @return Returns 1 if the user data is successfully saved, otherwise returns 0.
+ */
 int saveUser(const User* user, const char* filename) {
     FILE* file = fopen(filename, "ab");
     fwrite(user, sizeof(User), 1, file);
@@ -238,7 +280,16 @@ bool userAuthentication(std::istream& in, std::ostream& out) {
         }
     }
 }
-
+/**
+ * @brief Saves or updates utility usage data to a file.
+ *
+ * This function saves or updates the utility usage data of a user to the specified file.
+ * If the user already exists in the file, their usage data is updated; otherwise, a new entry is added.
+ *
+ * @param usage The UtilityUsage structure containing the usage data to be saved.
+ * @param filename The name of the file to save the utility usage data to.
+ * @return Returns true if the utility usage data is successfully saved, otherwise returns false.
+ */
 bool saveUtilityUsage(const UtilityUsage& usage, const char* filename) {
     UtilityUsage usages[100];
     int count = loadUtilityUsages(filename, usages, 100);
@@ -260,7 +311,16 @@ bool saveUtilityUsage(const UtilityUsage& usage, const char* filename) {
     fclose(file);
     return true;
 }
-
+/**
+ * @brief Loads utility usage data from a file into an array.
+ *
+ * This function loads utility usage data from the specified file into the provided array of UtilityUsage structures.
+ *
+ * @param filename The name of the file to load the utility usage data from.
+ * @param usages The array to store the loaded utility usage data.
+ * @param maxUsages The maximum number of utility usages that can be loaded into the array.
+ * @return Returns the number of utility usages loaded into the array.
+ */
 int loadUtilityUsages(const char* filename, UtilityUsage* usages, int maxUsages) {
     FILE* file = fopen(filename, "rb");
     if (!file) {
@@ -273,7 +333,17 @@ int loadUtilityUsages(const char* filename, UtilityUsage* usages, int maxUsages)
     fclose(file);
     return count;
 }
-
+/**
+ * @brief Computes the length of the longest common subsequence (LCS) of two strings.
+ *
+ * This function computes the length of the longest common subsequence (LCS) of two strings X and Y.
+ *
+ * @param X The first string.
+ * @param Y The second string.
+ * @param m The length of the first string.
+ * @param n The length of the second string.
+ * @return Returns the length of the LCS of the two strings.
+ */
 int lcs(char* X, char* Y, int m, int n)
 {
     int** L;
@@ -306,7 +376,15 @@ int lcs(char* X, char* Y, int m, int n)
 
     return result;
 }
-
+/**
+ * @brief Performs Breadth-First Search (BFS) traversal on a graph starting from a specified node.
+ *
+ * This function performs a Breadth-First Search (BFS) traversal on a graph starting from the specified node.
+ * It prints utility usage information of each node visited during the traversal.
+ *
+ * @param startNode Pointer to the starting node of the BFS traversal.
+ * @param out The output stream to print the traversal results to.
+ */
 void BFS(Node* startNode, std::ostream& out) {
     Node* queue[100];
     bool visited[100] = { false };
@@ -329,6 +407,15 @@ void BFS(Node* startNode, std::ostream& out) {
         }
     }
 }
+/**
+ * @brief Performs Depth-First Search (DFS) traversal on a graph starting from a specified node.
+ *
+ * This function performs a Depth-First Search (DFS) traversal on a graph starting from the specified node.
+ * It prints utility usage information of each node visited during the traversal.
+ *
+ * @param startNode Pointer to the starting node of the DFS traversal.
+ * @param out The output stream to print the traversal results to.
+ */
 
 void DFS(Node* startNode, std::ostream& out) {
     Node* stack[100];
@@ -353,7 +440,14 @@ void DFS(Node* startNode, std::ostream& out) {
         }
     }
 }
-
+/**
+ * @brief Loads utility usage data of the active user from a file into a graph.
+ *
+ * This function loads utility usage data of the active user from the specified file into a graph.
+ *
+ * @param filename The name of the file to load the utility usage data from.
+ * @return Returns true if the utility usage data is successfully loaded into the graph, otherwise returns false.
+ */
 bool loadGraph(const char* filename) {
     UtilityUsage usages[100];
     int usageCount = loadUtilityUsages(filename, usages, 100);
@@ -371,7 +465,16 @@ bool loadGraph(const char* filename) {
         } }
     return true;
 }
-
+/**
+ * @brief Views utility usages of the active user using a specified search method.
+ *
+ * This function views utility usages of the active user using either Breadth-First Search (BFS) or Depth-First Search (DFS).
+ *
+ * @param in The input stream for user interaction.
+ * @param out The output stream to print the utility usages to.
+ * @param searchType The selected search method (1 for BFS, 2 for DFS).
+ * @return Returns true if the utility usages are successfully viewed, otherwise returns false.
+ */
 bool viewUtilityUsages(std::istream& in, std::ostream& out, int searchType) {
     if (nodeCount == 0) {
         out << "No utility data available for the current user.\n";
@@ -396,8 +499,18 @@ bool viewUtilityUsages(std::istream& in, std::ostream& out, int searchType) {
     in.get();
     return true;
 }
-
-
+/**
+ * @brief Finds a path in the graph using Breadth-First Search (BFS) for flow computation.
+ *
+ * This function finds a path in the graph using Breadth-First Search (BFS) for flow computation in Ford-Fulkerson algorithm.
+ *
+ * @param source The index of the source node.
+ * @param sink The index of the sink node.
+ * @param parent An array to store the parent nodes of each node in the path.
+ * @param nodes An array of Node structures representing the graph.
+ * @param numNodes The number of nodes in the graph.
+ * @return Returns the flow of the found path.
+ */
 int findPath(int source, int sink, int parent[], Node nodes[], int numNodes) {
     bool visited[100] = { false };
     std::queue<int> queue;
@@ -424,7 +537,17 @@ int findPath(int source, int sink, int parent[], Node nodes[], int numNodes) {
     }
     return 0;
 }
-
+/**
+ * @brief Computes the maximum flow in a graph using the Ford-Fulkerson algorithm.
+ *
+ * This function computes the maximum flow in a graph using the Ford-Fulkerson algorithm.
+ *
+ * @param nodes An array of Node structures representing the graph.
+ * @param numNodes The number of nodes in the graph.
+ * @param source The index of the source node.
+ * @param sink The index of the sink node.
+ * @return Returns the maximum flow in the graph.
+ */
 int fordFulkerson(Node nodes[], int numNodes, int source, int sink) {
     int parent[100];
     int max_flow = 0;
@@ -445,9 +568,18 @@ int fordFulkerson(Node nodes[], int numNodes, int source, int sink) {
 
     return max_flow;
 }
-
-
-
+/**
+ * @brief Computes the maximum flow in a graph using the Edmonds-Karp algorithm.
+ *
+ * This function computes the maximum flow in a graph using the Edmonds-Karp algorithm,
+ * which is a variation of the Ford-Fulkerson algorithm that uses Breadth-First Search (BFS).
+ *
+ * @param nodes An array of Node structures representing the graph.
+ * @param numNodes The number of nodes in the graph.
+ * @param source The index of the source node.
+ * @param sink The index of the sink node.
+ * @return Returns the maximum flow in the graph.
+ */
 int edmondsKarp(Node nodes[], int numNodes, int source, int sink) {
     int parent[100];
     int max_flow = 0;
@@ -464,6 +596,16 @@ int edmondsKarp(Node nodes[], int numNodes, int source, int sink) {
     }
     return max_flow;
 }
+/**
+ * @brief Calculates and displays the maximum flow in the utility graph using a selected algorithm.
+ *
+ * This function allows the user to select an algorithm (Ford-Fulkerson, Edmonds-Karp, or Dinic's Algorithm)
+ * to calculate and display the maximum flow in the utility graph.
+ *
+ * @param in The input stream for user interaction.
+ * @param out The output stream to display the maximum flow.
+ * @return Returns true if the maximum flow is successfully calculated and displayed, otherwise returns false.
+ */
 bool calculateAndShowMaximumFlow(std::istream& in, std::ostream& out) {
     int choice;
     out << "Select the algorithm to calculate maximum flow:\n";
@@ -493,6 +635,16 @@ bool calculateAndShowMaximumFlow(std::istream& in, std::ostream& out) {
     }
     return true;
 }
+/**
+ * @brief Finds the shortest paths from a source house to other houses using Dijkstra's and Bellman-Ford algorithms.
+ *
+ * This function finds the shortest paths from a source house to other houses in the utility graph
+ * using Dijkstra's algorithm and Bellman-Ford algorithm, and displays the results.
+ *
+ * @param source The index of the source house.
+ * @param dist An array to store the distances from the source house.
+ * @param prev An array to store the predecessors of each house in the shortest paths.
+ */
 
 void dijkstra(int source, int dist[], int prev[]) {
     int visited[MAX_HOUSES] = { 0 };
@@ -522,7 +674,15 @@ void dijkstra(int source, int dist[], int prev[]) {
         }
     }
 }
-
+/**
+ * @brief Finds the shortest paths from a source house to other houses using Bellman-Ford algorithm.
+ *
+ * This function finds the shortest paths from a source house to other houses in the utility graph
+ * using the Bellman-Ford algorithm, and stores the distances in the provided array.
+ *
+ * @param source The index of the source house.
+ * @param dist An array to store the distances from the source house.
+ */
 void bellmanFord(int source, int dist[]) {
     for (int i = 0; i < numHouses; i++) {
         dist[i] = INF;
@@ -539,7 +699,11 @@ void bellmanFord(int source, int dist[]) {
         }
     }
 }
-
+/**
+ * @brief Initializes the costs matrix for shortest path algorithms.
+ *
+ * This function initializes the costs matrix with appropriate values for running shortest path algorithms.
+ */
 void initializeCosts() {
     for (int i = 0; i < MAX_HOUSES; i++) {
         for (int j = 0; j < MAX_HOUSES; j++) {
@@ -547,8 +711,14 @@ void initializeCosts() {
         }
     }
 }
-
-
+/**
+ * @brief Computes and displays the Minimum Spanning Tree (MST) of the utility graph using Prim's algorithm.
+ *
+ * This function computes and displays the Minimum Spanning Tree (MST) of the utility graph
+ * using Prim's algorithm.
+ *
+ * @param out The output stream to display the MST.
+ */
 void primMST(std::ostream& out) {
     int key[MAX_HOUSES];
     bool mstSet[MAX_HOUSES];
@@ -589,7 +759,14 @@ void primMST(std::ostream& out) {
         }
     }
 }
-
+/**
+ * @brief Finds the set to which an element belongs in the disjoint-set data structure.
+ *
+ * This function finds the set to which an element belongs in the disjoint-set data structure.
+ *
+ * @param i The index of the element.
+ * @return Returns the index of the set to which the element belongs.
+ */
 int find(int i) {
     if (parent[i] == i) {
         return i; }
@@ -597,13 +774,27 @@ int find(int i) {
         return (parent[i] = find(parent[i]));
     }
 }
-
+/**
+ * @brief Performs union operation in the disjoint-set data structure.
+ *
+ * This function performs the union operation in the disjoint-set data structure.
+ *
+ * @param i The index of the first element.
+ * @param j The index of the second element.
+ */
 void union1(int i, int j) {
     int a = find(i);
     int b = find(j);
     parent[a] = b;
 }
-
+/**
+ * @brief Computes and displays the Minimum Spanning Tree (MST) of the utility graph using Kruskal's algorithm.
+ *
+ * This function computes and displays the Minimum Spanning Tree (MST) of the utility graph
+ * using Kruskal's algorithm.
+ *
+ * @param out The output stream to display the MST.
+ */
 void kruskalMST(std::ostream& out) {
     Edge edges[MAX_HOUSES * MAX_HOUSES];
     int edgeCount = 0;
@@ -647,7 +838,17 @@ void kruskalMST(std::ostream& out) {
         }
     }
 }
-
+/**
+ * @brief Handles utility logging and related operations.
+ *
+ * This function handles utility logging operations such as logging electricity, water, and gas usage,
+ * viewing total usages, calculating and showing maximum flow, finding shortest paths, and computing MST.
+ *
+ * @param in The input stream for user interaction.
+ * @param out The output stream for displaying information.
+ * @param localGuestMode A boolean flag indicating whether the user is in guest mode or not.
+ * @return Returns true if the utility logging operations are successfully completed, otherwise returns false.
+ */
 bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
     if (localGuestMode) {
         out << "Guest mode does not have permission to log utility.\n";
@@ -763,7 +964,18 @@ bool utilityLogging(std::istream& in, std::ostream& out, bool localGuestMode) {
         }
     }
 }
-
+/**
+ * @brief Calculates and displays the utility expenses for the active user.
+ *
+ * This function calculates and displays the utility expenses for the active user
+ * based on the logged electricity, water, and gas usage.
+ *
+ * @param in The input stream for user interaction.
+ * @param out The output stream for displaying information.
+ * @param activeUser The username of the active user.
+ * @param guestMode A boolean flag indicating whether the user is in guest mode or not.
+ * @return Returns true if the utility expenses are successfully calculated and displayed, otherwise returns false.
+ */
 bool calculateAndShowExpenses(std::istream& in, std::ostream& out, const char* activeUser, bool guestMode) {
     clearScreen();
     if (guestMode) {
@@ -801,7 +1013,15 @@ bool calculateAndShowExpenses(std::istream& in, std::ostream& out, const char* a
         return false;
     }
 }
-
+/**
+ * @brief Displays trend analysis of utility usages on a countrywide scale.
+ *
+ * This function displays trend analysis of utility usages, including electricity, water, and gas,
+ * on a countrywide scale.
+ *
+ * @param in The input stream for user interaction.
+ * @param out The output stream for displaying trend analysis.
+ */
 void showTrendAnalysis(std::istream& in, std::ostream& out) {
     clearScreen();
     const int totalElectricityUsage = 546515;
@@ -817,16 +1037,32 @@ void showTrendAnalysis(std::istream& in, std::ostream& out) {
     out << "+-------------------------------------+\n";
     in.get();
 }
-
-
-
+/**
+ * @brief Saves a reminder to the reminder file.
+ *
+ * This function saves a reminder to the reminder file specified by the filename.
+ *
+ * @param reminder Pointer to the Reminder structure containing the reminder information.
+ * @param filename Name of the file to which the reminder will be saved.
+ * @return Returns 1 if the reminder is successfully saved, otherwise returns 0.
+ */
 int saveReminder(const Reminder* reminder, const char* filename) {
     FILE* file = fopen(filename, "ab");
     fwrite(reminder, sizeof(Reminder), 1, file);
     fclose(file);
     return 1;
 }
-
+/**
+ * @brief Loads reminders for a specific user from the reminder file.
+ *
+ * This function loads reminders for a specific user from the reminder file specified by the filename.
+ *
+ * @param username The username for which reminders are to be loaded.
+ * @param filename Name of the file from which reminders will be loaded.
+ * @param reminders Array to store the loaded reminders.
+ * @param maxReminders Maximum number of reminders that can be loaded.
+ * @return Returns the number of reminders loaded for the specified user.
+ */
 int loadReminders(const char* username, const char* filename, Reminder* reminders, int maxReminders) {
     FILE* file = fopen(filename, "rb");
     int reminderCount = 0;
@@ -839,7 +1075,17 @@ int loadReminders(const char* username, const char* filename, Reminder* reminder
     fclose(file);
     return reminderCount;
 }
-
+/**
+ * @brief Prints the upcoming reminders to the output stream.
+ *
+ * This function prints the upcoming reminders to the output stream.
+ *
+ * @param reminders Array of Reminder structures containing the reminders to be printed.
+ * @param reminderCount Number of reminders to be printed.
+ * @param in The input stream for user interaction.
+ * @param out The output stream for displaying the reminders.
+ * @return Returns true if reminders are printed successfully, otherwise returns false.
+ */
 bool printReminders(const Reminder* reminders, int reminderCount, std::istream& in, std::ostream& out) {
     if (reminderCount == 0) {
         out << "You have no reminders.\n";
@@ -860,7 +1106,17 @@ bool printReminders(const Reminder* reminders, int reminderCount, std::istream& 
     in.get();
     return true;
 }
-
+/**
+ * @brief Handles the setup and management of reminders.
+ *
+ * This function handles the setup and management of reminders, including setting payment reminders,
+ * viewing upcoming reminders, and navigating back to the main menu.
+ *
+ * @param in The input stream for user interaction.
+ * @param out The output stream for displaying information.
+ * @param localGuestMode A boolean flag indicating whether the user is in guest mode or not.
+ * @return Returns true if the reminder setup operations are successfully completed, otherwise returns false.
+ */
 bool ReminderSetup(std::istream& in, std::ostream& out, bool localGuestMode) {
     if (localGuestMode) {
         out << "Guest mode does not have permission to set reminders.\n";

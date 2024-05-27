@@ -10,50 +10,92 @@
 #include <cstring>
 #include <climits>
 #include "../../des/header/des.h"
-const int MAX_NEIGHBORS = 10;
-typedef struct{
-    char username[50];
-    char reminderText[100];
-    int daysAfter;
-}Reminder;
-
-typedef struct{
-    char username[50];
-    char password[50];
-}User;
-
+ /**
+  * @brief Structure representing a reminder.
+  *
+  * This structure holds information about a reminder, including the username of the user, the reminder text,
+  * and the number of days after which the reminder should be triggered.
+  */
+typedef struct {
+    char username[50]; ///< Username of the user associated with the reminder.
+    char reminderText[100]; ///< Text of the reminder.
+    int daysAfter; ///< Number of days after which the reminder should be triggered.
+} Reminder;
+/**
+ * @brief Structure representing a user.
+ * 
+ * This structure holds information about a user, including the username and password.
+ */
+typedef struct {
+    char username[50]; ///< Username of the user.
+    char password[50]; ///< Password of the user.
+} User;
+/**
+ * @brief Structure representing utility usage.
+ *
+ * This structure holds information about utility usage, including the username of the user,
+ * as well as the amount of electricity, water, and gas consumed.
+ */
 struct UtilityUsage {
-    char username[50];
-    double electricity = 0;
-    double water = 0;
-    double gas = 0;
+    char username[50]; ///< Username of the user.
+    double electricity; ///< Amount of electricity consumed.
+    double water; ///< Amount of water consumed.
+    double gas; ///< Amount of gas consumed.
 };
-
+/**
+ * @brief Structure representing a node in a graph.
+ *
+ * This structure represents a node in a graph used for utility usage analysis. It contains
+ * information about utility usage, including electricity, water, and gas consumption, as well
+ * as connections to neighboring nodes.
+ */
 struct Node {
-    char username[50];
-    double electricity;
-    double water;
-    double gas;
-    Node* neighbors[10];
-    int neighborCount;
+    char username[50];///< Username associated with the node.
+    double electricity;///< Electricity consumption of the node.
+    double water;///< Water consumption of the node.
+    double gas;///< Gas consumption of the node.
+    Node* neighbors[10];///< Array of pointers to neighboring nodes.
+    int neighborCount;///< Number of neighboring nodes.
 
-    // Default constructor
+    /**
+ * Initialize username with an empty string
+ */
     Node() : electricity(0), water(0), gas(0), neighborCount(0) {
-        username[0] = '\0';  // Initialize username with an empty string
+        username[0] = '\0';  
     }
 
-    // Constructor with username parameter
+    /**
+ * Initialize username with an empty string
+ */
     Node(const char* uname) : electricity(0), water(0), gas(0), neighborCount(0) {
         strcpy(username, uname);
     }
 };
-
+/**
+ * @brief Structure representing an edge in a graph.
+ *
+ * This structure holds information about an edge in a graph, including the source vertex, destination vertex,
+ * and the weight of the edge.
+ */
 typedef struct {
-    int u, v, weight;
+    int u; ///< Source vertex of the edge.
+    int v; ///< Destination vertex of the edge.
+    int weight; ///< Weight of the edge.
 } Edge;
 
+/**
+ * @brief Price per unit of electricity (kWh).
+ */
 const double ELECTRICITY_PRICE_PER_KWH = 0.145;
+
+/**
+ * @brief Price per unit of water (cubic meter).
+ */
 const double WATER_PRICE_PER_CUBIC_METER = 1.30;
+
+/**
+ * @brief Price per unit of gas (cubic meter).
+ */
 const double GAS_PRICE_PER_CUBIC_METER = 0.75;
 
 void clearScreen();

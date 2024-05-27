@@ -40,6 +40,7 @@ set(CRYPTOPP_BUILD_SHARED OFF)
 set(CRYPTOPP_USE_MASTER_BRANCH FALSE)
 
 option(ENABLE_UTILITY "Enable Utility Module" ON)
+option(ENABLE_AES "Enable Aes Module" ON)
 option(ENABLE_DES "Enable Des Module" ON)
 option(ENABLE_SHA256 "Enable SHA256 Module" ON)
 option(ENABLE_COTP "Enable Cotp Module" ON)
@@ -106,6 +107,11 @@ endif()
 # Des submodule
 if(ENABLE_DES)
 	add_subdirectory(${ROOT}/des)
+endif()
+
+# Aes submodule
+if(ENABLE_AES)
+	add_subdirectory(${ROOT}/aes)
 endif()
 
 # Sha256 submodule
